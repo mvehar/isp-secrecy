@@ -2,6 +2,7 @@ package isp.secrecy;
 
 import javax.crypto.Cipher;
 import java.security.*;
+import java.util.Formatter;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -31,45 +32,31 @@ import java.util.concurrent.LinkedBlockingQueue;
  * http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/CryptoSpec.html#Cipher
  *
  * @author Iztok Starc <iztok.starc@fri.uni-lj.si>
- * @date 19. 12. 2011
  * @version 1
+ * @date 19. 12. 2011
  */
 
 
 public class AgentCommunicationAsymmetricCipher {
 
-    /**
-     * Standard Algorithm Names
-     * http://docs.oracle.com/javase/6/docs/technotes/guides/security/StandardNames.html
-     */
-
-    /**
-     * CIPHER ALGORITHM
-     */
-    public static String ALG1 = "RSA";
-
-    private static BlockingQueue<String> alice2bob;
-    private static BlockingQueue<String> bob2alice;
-
-    private static Agent alice;
-    private static Agent bob;
-
     public static void main(String[] args) throws NoSuchAlgorithmException {
-
         /**
          * STEP 1.
          * Bob creates public and private key. Alice receives Bob's public key securely.
          */
-        KeyPair kp = KeyPairGenerator.getInstance(ALG1).generateKeyPair();
-        PrivateKey privKey = kp.getPrivate();
-        PublicKey pubKey = kp.getPublic();
+
+        final String encryptionAlgorithm = "RSA";
+
+        final KeyPair kp = KeyPairGenerator.getInstance(encryptionAlgorithm).generateKeyPair();
+        final PrivateKey privKey = kp.getPrivate();
+        final PublicKey pubKey = kp.getPublic();
 
         /**
          * STEP 2.
          * Setup a (un)secure communication channel.
          */
-        AgentCommunicationAsymmetricCipher.alice2bob = new LinkedBlockingQueue<String>();
-        AgentCommunicationAsymmetricCipher.bob2alice = new LinkedBlockingQueue<String>();
+        final BlockingQueue<String> alice2bob = new LinkedBlockingQueue<String>();
+        final BlockingQueue<String> bob2alice = new LinkedBlockingQueue<String>();
 
         /**
          * STEP 3.
@@ -79,7 +66,7 @@ public class AgentCommunicationAsymmetricCipher {
          *   o cipher_TEXT
          * - uses Bob's private key to encrypt clear_TEXT.
          */
-        alice = new Agent(bob2alice, alice2bob, (Key) pubKey, ALG1) {
+        final Agent alice = new Agent(bob2alice, alice2bob, (Key) pubKey, encryptionAlgorithm) {
 
             @Override
             public void run() {
@@ -124,7 +111,7 @@ public class AgentCommunicationAsymmetricCipher {
          *   o cipher_TEXT
          * - uses his private key to decrypt the cipher_TEXT
          */
-        bob = new Agent(alice2bob, bob2alice, (Key) privKey, ALG1) {
+        final Agent bob = new Agent(alice2bob, bob2alice, (Key) privKey, encryptionAlgorithm) {
 
             @Override
             public void run() {
@@ -136,7 +123,7 @@ public class AgentCommunicationAsymmetricCipher {
                      * over the communication channel, thus, 
                      * Base64 encoding/decoding is used to transfer checksums.
                      */
-                    byte[] received_cipher_TEXT = Base64.decode(super.fromAgent.take()); /* */
+                    byte[] received_cipher_TEXT = Base64.decode(super.incoming.take()); /* */
                     Formatter frm1 = new Formatter();
                     for (byte b : received_cipher_TEXT)
                         frm1.format("%02x", b);

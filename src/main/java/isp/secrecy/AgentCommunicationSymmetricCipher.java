@@ -1,4 +1,4 @@
-/**
+package isp.secrecy; /**
  * I0->I1->A1->B1->A2->B2->A3->B3->A4->B4->A5->[B5]
  * 
  * EXERCISE B5:
@@ -38,7 +38,6 @@
 import java.security.*;
 import javax.crypto.*;
 import java.util.concurrent.*;
-import org.apache.xml.security.utils.Base64;
 import java.util.Formatter;
 
 public class AgentCommunicationSymmetricCipher {
