@@ -1,8 +1,10 @@
 package isp.secrecy;
 
 import javax.crypto.Cipher;
-import java.security.*;
-import java.util.Formatter;
+import javax.xml.bind.DatatypeConverter;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -13,8 +15,8 @@ import java.util.concurrent.LinkedBlockingQueue;
  * An agent communication example. Message Confidentiality is provided using asymmetric
  * cypher algorithm.
  * <p/>
- * Special care has to be taken when transferring binary stream over the communication
- * channel, thus, Base64 encoding/decoding is used to transfer checksums.
+ * Special care has to be taken when transferring binary data over the string-based communication
+ * channel, therefore we convert byte array into String of hexadecimal characters.
  * <p/>
  * A communication channel is implemented by thread-safe blocking queue using
  * linked-list data structure.
@@ -26,7 +28,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * <p/>
  * EXERCISE:
  * - Study this example.
- * - Observe both ciphertext in hexadecimal format (use Formatter).
+ * - Observe both ciphertext in hexadecimal format
  * <p/>
  * INFO:
  * http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/CryptoSpec.html#Cipher
@@ -36,123 +38,90 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @date 19. 12. 2011
  */
 
-
 public class AgentCommunicationAsymmetricCipher {
 
     public static void main(String[] args) throws NoSuchAlgorithmException {
+        final String encryptionAlg = "RSA";
+
         /**
          * STEP 1.
-         * Bob creates public and private key. Alice receives Bob's public key securely.
+         * Bob creates his key pair and public and private key. Alice receives Bob's public key securely.
          */
-
-        final String encryptionAlgorithm = "RSA";
-
-        final KeyPair kp = KeyPairGenerator.getInstance(encryptionAlgorithm).generateKeyPair();
-        final PrivateKey privKey = kp.getPrivate();
-        final PublicKey pubKey = kp.getPublic();
+        final KeyPair bobKP = KeyPairGenerator.getInstance(encryptionAlg).generateKeyPair();
 
         /**
          * STEP 2.
-         * Setup a (un)secure communication channel.
+         * Setup an insecure communication channel.
          */
-        final BlockingQueue<String> alice2bob = new LinkedBlockingQueue<String>();
-        final BlockingQueue<String> bob2alice = new LinkedBlockingQueue<String>();
+        final BlockingQueue<String> alice2bob = new LinkedBlockingQueue<>();
+        final BlockingQueue<String> bob2alice = new LinkedBlockingQueue<>();
 
         /**
          * STEP 3.
-         * Agent Alice definition:
-         * - uses the communication channel,
-         * - sends a message that is comprised of:
-         *   o cipher_TEXT
-         * - uses Bob's private key to encrypt clear_TEXT.
+         * Alice:
+         * - creates a message,
+         * - encrypts it using Bob's public key
+         * - sends it to Bob
          */
-        final Agent alice = new Agent(bob2alice, alice2bob, (Key) pubKey, encryptionAlgorithm, null, null) {
-
+        final Agent alice = new Agent(alice2bob, bob2alice, bobKP.getPublic(), encryptionAlg, null, null) {
             @Override
             public void run() {
                 try {
-                    /**
-                     * STEP 3.1
-                     * Alice writes a message.
-                     * This action is recorded in Alice's log.
-                     */
-                    String TEXT = "I love you Bob. Kisses, Alice.";
-                    System.out.println("[Alice::Log]: I have sent the following message to Bob.");
-                    System.out.println("[Alice::Log]: TEXT: " + TEXT);
+                    // STEP 3.1:  Alice creates a message
+                    final String text = "I love you Bob. Kisses, Alice.";
 
-                    /**
-                     * STEP 3.2
-                     * In addition, Alice encrypts clear_TEXT using selected
-                     * algorithm and Bob's public key.
-                     */
-                    Cipher c1 = Cipher.getInstance(super.cryptoAlgorithm);
-                    c1.init(Cipher.ENCRYPT_MODE, (PublicKey) super.cryptoKey);
-                    byte[] cipher_TEXT = c1.doFinal(TEXT.getBytes());
+                    // STEP 3.2: Alice encrypts the text with selected algorithm using Bob's public key.
+                    final Cipher cipher = Cipher.getInstance(cryptoAlgorithm);
+                    cipher.init(Cipher.ENCRYPT_MODE, cryptoKey);
+                    final byte[] cipherText = cipher.doFinal(text.getBytes("UTF-8"));
 
-                    /**
-                     * STEP 3.3
-                     * Special care has to be taken when transferring binary stream 
-                     * over the communication channel, thus, 
-                     * Base64 encoding/decoding is used to transfer checksums.
-                     */
-                    // outgoing.put(Base64.encode(cipher_TEXT));
+                    // STEP 3.3: Encode the cipher text into string of hexadecimal numbers
+                    final String cipherTextHEX = DatatypeConverter.printHexBinary(cipherText);
 
+                    // STEP 3.4: Alice logs the act of sending the message
+                    System.out.println("[Alice]: Sending to Bob: " + text);
+                    System.out.println("[Alice]: Sending to Bob (encrypted): " + cipherTextHEX);
+
+                    // STEP 3.4: Send the message across the channel
+                    outgoing.put(cipherTextHEX);
                 } catch (Exception ex) {
-                    System.out.println("[Alice::Log]: Something went wrong.");
+                    System.err.println("[Alice] Exception: " + ex.getMessage());
                 }
             }
         };
 
         /**
          * STEP 4.
-         * Agent Bob definition:
-         * - uses the communication channel,
-         * - receives the message that is comprised of:
-         *   o cipher_TEXT
-         * - uses his private key to decrypt the cipher_TEXT
+         * Bob:
+         * - waits for a message from Alice
+         * - upon receiving it, uses his private key to decrypt it
          */
-        final Agent bob = new Agent(alice2bob, bob2alice, (Key) privKey, encryptionAlgorithm, null, null) {
-
+        final Agent bob = new Agent(bob2alice, alice2bob, bobKP.getPrivate(), encryptionAlg, null, null) {
             @Override
             public void run() {
                 try {
-                    System.out.println("[Bob::Log]: I am waiting for message.");
-                    /**
-                     * STEP 4.1
-                     * Special care has to be taken when transferring binary stream 
-                     * over the communication channel, thus, 
-                     * Base64 encoding/decoding is used to transfer checksums.
-                     */
-                    /*byte[] received_cipher_TEXT = Base64.decode(super.incoming.take());
-                    Formatter frm1 = new Formatter();
-                    for (byte b : received_cipher_TEXT)
-                        frm1.format("%02x", b);
-                    System.out.println("[Bob::Log]: CIPHERTEXT: " + frm1.toString());*/
+                    final String cipherTextHEX = incoming.take();
+                    System.out.println("[Bob]: Received " + cipherTextHEX);
 
-                    /**
-                     * STEP 4.3
-                     * Bob decrypts cipher_TEXT.
-                     */
-                    Cipher c1 = Cipher.getInstance(super.cryptoAlgorithm);
-                    c1.init(Cipher.DECRYPT_MODE, (PrivateKey) super.cryptoKey);
-                    //byte[] received_clear_TEXT = c1.doFinal(received_cipher_TEXT);
+                    // STEP 4.1: Decode the incoming string of HEX literals into a byte array
+                    final byte[] cipherText = DatatypeConverter.parseHexBinary(cipherTextHEX);
 
-                    /**
-                     * STEP 4.4
-                     * Print out.
-                     */
-                    //System.out.println("[Bob::Log]: CLEARTEXT: " + new String(received_clear_TEXT));
+                    // STEP 4.3: Bob decrypts cipher_TEXT
+                    final Cipher cipher = Cipher.getInstance(cryptoAlgorithm);
+                    cipher.init(Cipher.DECRYPT_MODE, cryptoKey);
+                    final byte[] clearText = cipher.doFinal(cipherText);
 
+                    // STEP 4.3: Bob creates a string from the decrypted byte array
+                    final String message = new String(clearText, "UTF-8");
+
+                    // STEP 4.4: Display the text
+                    System.out.println("[Bob]: Decrypted: " + message);
                 } catch (Exception ex) {
-                    System.out.println("[Bob::Log]: Something went wrong.");
+                    System.out.println("[Bob]: Exception: " + ex.getLocalizedMessage());
                 }
             }
         };
 
-        /**
-         * STEP 5.
-         * Two commands below "fire" both agents and the fun begins ... :-)
-         */
         alice.start();
         bob.start();
     }
