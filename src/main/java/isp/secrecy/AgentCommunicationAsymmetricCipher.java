@@ -66,7 +66,7 @@ public class AgentCommunicationAsymmetricCipher {
          *   o cipher_TEXT
          * - uses Bob's private key to encrypt clear_TEXT.
          */
-        final Agent alice = new Agent(bob2alice, alice2bob, (Key) pubKey, encryptionAlgorithm) {
+        final Agent alice = new Agent(bob2alice, alice2bob, (Key) pubKey, encryptionAlgorithm, null, null) {
 
             @Override
             public void run() {
@@ -95,7 +95,7 @@ public class AgentCommunicationAsymmetricCipher {
                      * over the communication channel, thus, 
                      * Base64 encoding/decoding is used to transfer checksums.
                      */
-                    super.outgoing.put(Base64.encode(cipher_TEXT));
+                    // outgoing.put(Base64.encode(cipher_TEXT));
 
                 } catch (Exception ex) {
                     System.out.println("[Alice::Log]: Something went wrong.");
@@ -111,7 +111,7 @@ public class AgentCommunicationAsymmetricCipher {
          *   o cipher_TEXT
          * - uses his private key to decrypt the cipher_TEXT
          */
-        final Agent bob = new Agent(alice2bob, bob2alice, (Key) privKey, encryptionAlgorithm) {
+        final Agent bob = new Agent(alice2bob, bob2alice, (Key) privKey, encryptionAlgorithm, null, null) {
 
             @Override
             public void run() {
@@ -123,11 +123,11 @@ public class AgentCommunicationAsymmetricCipher {
                      * over the communication channel, thus, 
                      * Base64 encoding/decoding is used to transfer checksums.
                      */
-                    byte[] received_cipher_TEXT = Base64.decode(super.incoming.take()); /* */
+                    /*byte[] received_cipher_TEXT = Base64.decode(super.incoming.take());
                     Formatter frm1 = new Formatter();
                     for (byte b : received_cipher_TEXT)
                         frm1.format("%02x", b);
-                    System.out.println("[Bob::Log]: CIPHERTEXT: " + frm1.toString());
+                    System.out.println("[Bob::Log]: CIPHERTEXT: " + frm1.toString());*/
 
                     /**
                      * STEP 4.3
@@ -135,13 +135,13 @@ public class AgentCommunicationAsymmetricCipher {
                      */
                     Cipher c1 = Cipher.getInstance(super.cryptoAlgorithm);
                     c1.init(Cipher.DECRYPT_MODE, (PrivateKey) super.cryptoKey);
-                    byte[] received_clear_TEXT = c1.doFinal(received_cipher_TEXT);
+                    //byte[] received_clear_TEXT = c1.doFinal(received_cipher_TEXT);
 
                     /**
                      * STEP 4.4
                      * Print out.
                      */
-                    System.out.println("[Bob::Log]: CLEARTEXT: " + new String(received_clear_TEXT));
+                    //System.out.println("[Bob::Log]: CLEARTEXT: " + new String(received_clear_TEXT));
 
                 } catch (Exception ex) {
                     System.out.println("[Bob::Log]: Something went wrong.");
