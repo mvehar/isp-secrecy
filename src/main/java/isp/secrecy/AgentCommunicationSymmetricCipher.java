@@ -33,6 +33,7 @@ package isp.secrecy; /**
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.xml.bind.DatatypeConverter;
+import java.security.AlgorithmParameters;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.BlockingQueue;
@@ -40,13 +41,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class AgentCommunicationSymmetricCipher {
     // BLOCK CIPHER
-    public static String[] ALG1 = { "DES", "DES/ECB/PKCS5Padding" };
-    public static String[] ALG2 = { "DESede", "DESede/ECB/PKCS5Padding" };
-    public static String[] ALG3 = { "AES", "AES/ECB/PKCS5Padding" };
-    public static String[] ALG4 = { "AES", "AES/CBC/PKCS5Padding" };
+    public static String[] ALG1 = {"DES", "DES/ECB/PKCS5Padding"};
+    public static String[] ALG2 = {"DESede", "DESede/ECB/PKCS5Padding"};
+    public static String[] ALG3 = {"AES", "AES/ECB/PKCS5Padding"};
+    public static String[] ALG4 = {"AES", "AES/CBC/PKCS5Padding"};
 
     // STREAM CIPHER
-    public static String[] ALG5 = { "RC4", "RC4" };
+    public static String[] ALG5 = {"RC4", "RC4"};
 
     public static void main(String[] args) throws NoSuchAlgorithmException {
         /**
@@ -54,7 +55,7 @@ public class AgentCommunicationSymmetricCipher {
          * Alice and Bob agree upon a cipher algorithm and a shared secret session key 
          * is created that will be used for encryption and decryption.
          */
-        final Key key = KeyGenerator.getInstance(ALG3[0]).generateKey();
+        final Key key = KeyGenerator.getInstance(ALG4[0]).generateKey();
 
         /**
          * STEP 2.
@@ -64,7 +65,8 @@ public class AgentCommunicationSymmetricCipher {
         final BlockingQueue<String> bob2alice = new LinkedBlockingQueue<>();
 
         // TODO STEP 3: Alice creates, encrypts and sends a message
-        final Agent alice = new Agent(alice2bob, bob2alice, key, ALG3[0], null, null) {
+        // In some modes, you have to encode and send the algorithm parameters as well
+        final Agent alice = new Agent(alice2bob, bob2alice, key, ALG4[1], null, null) {
 
             @Override
             public void run() {
@@ -77,12 +79,17 @@ public class AgentCommunicationSymmetricCipher {
 
                     final Cipher cipher = Cipher.getInstance(cryptoAlgorithm);
                     cipher.init(Cipher.ENCRYPT_MODE, cryptoKey);
+                    final AlgorithmParameters parameters = cipher.getParameters();
                     final byte[] cipherText = cipher.doFinal(clearText);
+
+                    // To obtain cipher parameters use: cipher.getParameters();
+                    // You can get them in an encoded form with cipher.getParameters().getEncoded()
 
                     final String cipherTextHEX = DatatypeConverter.printHexBinary(cipherText);
                     System.out.println("[Alice][CIPHER_TEXT] " + cipherTextHEX);
 
                     System.out.println("[Alice]: Sending to Bob ...");
+                    outgoing.put(DatatypeConverter.printHexBinary(parameters.getEncoded()));
                     outgoing.put(cipherTextHEX);
                 } catch (Exception ex) {
                     System.out.println("[Alice] Exception: " + ex.getLocalizedMessage());
@@ -91,17 +98,28 @@ public class AgentCommunicationSymmetricCipher {
         };
 
         // TODO STEP 4: Bob receives, decrypts and displays a message
-        final Agent bob = new Agent(bob2alice, alice2bob, key, ALG3[0], null, null) {
+        final Agent bob = new Agent(bob2alice, alice2bob, key, ALG4[1], null, null) {
             @Override
             public void run() {
                 try {
+                    final String parametersHEX = incoming.take();
                     final String cipherTextHEX = incoming.take();
-                    System.out.println("[Bob]: Received from Alice: " + cipherTextHEX);
+                    System.out.println("[Bob]: Received from Alice: Parameters: " + parametersHEX);
+                    System.out.println("[Bob]: Received from Alice: CT: " + cipherTextHEX);
 
                     final byte[] cipherText = DatatypeConverter.parseHexBinary(cipherTextHEX);
 
+                    // Once you obtain the byte[] representation of cipher parameters, you can load them with
+                    // the following commands
+                    // final AlgorithmParameters ap = AlgorithmParameters.getInstance("AES");
+                    // ap.init(parameters);
+
+                    final byte[] parameters = DatatypeConverter.parseHexBinary(parametersHEX);
+                    final AlgorithmParameters ap = AlgorithmParameters.getInstance("AES");
+                    ap.init(parameters);
+
                     final Cipher cipher = Cipher.getInstance(cryptoAlgorithm);
-                    cipher.init(Cipher.DECRYPT_MODE, cryptoKey);
+                    cipher.init(Cipher.DECRYPT_MODE, cryptoKey, ap);
                     final byte[] clearText = cipher.doFinal(cipherText);
 
                     System.out.println("[Bob][CLEAR_TEXT] " + DatatypeConverter.printHexBinary(clearText));

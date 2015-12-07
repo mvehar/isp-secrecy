@@ -39,13 +39,13 @@ import java.security.NoSuchAlgorithmException;
  */
 public class SymmetricCipherExample {
     // BLOCK CIPHERS
-    public static final String[] ALG1 = { "DES", "DES/ECB/PKCS5Padding" };
-    public static final String[] ALG2 = { "DESede", "DESede/ECB/PKCS5Padding" };
-    public static final String[] ALG3 = { "AES", "AES/ECB/PKCS5Padding" };
-    public static final String[] ALG4 = { "AES", "AES/CBC/PKCS5Padding" };
+    public static final String[] ALG1 = {"DES", "DES/ECB/PKCS5Padding"};
+    public static final String[] ALG2 = {"DESede", "DESede/ECB/PKCS5Padding"};
+    public static final String[] ALG3 = {"AES", "AES/ECB/PKCS5Padding"};
+    public static final String[] ALG4 = {"AES", "AES/CBC/PKCS5Padding"};
 
     // STREAM CIPHER
-    public static final String[] ALG5 = { "RC4", "RC4" };
+    public static final String[] ALG5 = {"RC4", "RC4"};
 
     public static void main(String[] args)
             throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException,
@@ -80,20 +80,17 @@ public class SymmetricCipherExample {
         //STEP 3: Print out cipher text (hex). This is what an attacker would see
         System.out.println("[CIPHER_TEXT] " + DatatypeConverter.printHexBinary(cipherText));
 
-        /**
-         * STEP 4.
-         * Bob creates Cipher object, defining cipher algorithm, secret key and
-         * algorithm initialization parameters such as Initialization vector (IV),
-         * if necessary.
-         *
-         * Bob decrypts cipher text
-         *
-         */
-
+        // Optional
         // What happens if an attacker changes a value in the cipher text?
         // Set the cipher to ALG5[0]
         // cipherText[10] = (byte) 150;
 
+        /**
+         * STEP 4.
+         * Bob creates Cipher object, defining cipher algorithm, secret key and
+         * algorithm initialization parameters such as Initialization vector (IV),
+         * if necessary. and then decrypts the cipher text
+         */
         final Cipher cipher2 = Cipher.getInstance(ALG4[1]);
         cipher2.init(Cipher.DECRYPT_MODE, key, ap);
         // what happens if our key is incorrect? (make sure to set ALG5[0] to all algorithm selections
