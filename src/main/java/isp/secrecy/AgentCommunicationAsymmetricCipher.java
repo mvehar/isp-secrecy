@@ -70,20 +70,15 @@ public class AgentCommunicationAsymmetricCipher {
                     // STEP 3.1:  Alice creates a message
                     final String text = "I love you Bob. Kisses, Alice.";
 
-                    // STEP 3.2: Alice encrypts the text with selected algorithm using Bob's public key.
-                    final Cipher cipher = Cipher.getInstance(cryptoAlgorithm);
-                    cipher.init(Cipher.ENCRYPT_MODE, cryptoKey);
-                    final byte[] cipherText = cipher.doFinal(text.getBytes("UTF-8"));
+                    // TODO STEP 3.2: Alice encrypts the text with selected algorithm using Bob's public key.
 
-                    // STEP 3.3: Encode the cipher text into string of hexadecimal numbers
-                    final String cipherTextHEX = DatatypeConverter.printHexBinary(cipherText);
 
-                    // STEP 3.4: Alice logs the act of sending the message
-                    System.out.println("[Alice]: Sending to Bob: " + text);
-                    System.out.println("[Alice]: Sending to Bob (encrypted): " + cipherTextHEX);
+                    // TODO STEP 3.3: Encode the cipher text into string of hexadecimal numbers
 
-                    // STEP 3.4: Send the message across the channel
-                    outgoing.put(cipherTextHEX);
+
+                    // TODO STEP 3.4: Alice logs the act of sending the message
+
+                    // TODO STEP 3.4: Send the message across the channel
                 } catch (Exception ex) {
                     System.err.println("[Alice] Exception: " + ex.getMessage());
                 }
@@ -100,22 +95,17 @@ public class AgentCommunicationAsymmetricCipher {
             @Override
             public void run() {
                 try {
+                    // STEP 4.1: Bob receives the message
                     final String cipherTextHEX = incoming.take();
                     System.out.println("[Bob]: Received " + cipherTextHEX);
 
-                    // STEP 4.1: Decode the incoming string of HEX literals into a byte array
-                    final byte[] cipherText = DatatypeConverter.parseHexBinary(cipherTextHEX);
+                    // TODO STEP 4.2: Decode the incoming string of HEX literals into a byte array
 
-                    // STEP 4.3: Bob decrypts cipher_TEXT
-                    final Cipher cipher = Cipher.getInstance(cryptoAlgorithm);
-                    cipher.init(Cipher.DECRYPT_MODE, cryptoKey);
-                    final byte[] clearText = cipher.doFinal(cipherText);
+                    // TODO STEP 4.3: Bob decrypts the cipher text
 
-                    // STEP 4.3: Bob creates a string from the decrypted byte array
-                    final String message = new String(clearText, "UTF-8");
+                    // TODO STEP 4.3: Bob creates a string from the decrypted byte array
 
-                    // STEP 4.4: Display the text
-                    System.out.println("[Bob]: Decrypted: " + message);
+                    // TODO STEP 4.4: Bob displays the text
                 } catch (Exception ex) {
                     System.out.println("[Bob]: Exception: " + ex.getLocalizedMessage());
                 }

@@ -46,7 +46,7 @@ public class AsymmetricCipherExample {
         // She then encrypts the clear-text and sends it to Bob.
         final Cipher encryptionCipher = Cipher.getInstance(algorithm);
         encryptionCipher.init(Cipher.ENCRYPT_MODE, bobKP.getPublic());
-        final byte[] cipherText = encryptionCipher.doFinal(clearText);
+        final byte[] cipherText = encryptionCipher.doFinal(clearText);;
 
         // STEP 3: Display cipher text in hex. This is what an attacker would see,
         // if she intercepted the message.
