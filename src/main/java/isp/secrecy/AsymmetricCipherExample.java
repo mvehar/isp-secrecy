@@ -18,6 +18,9 @@ import java.security.NoSuchAlgorithmException;
  * <p/>
  * EXERCISE: Study the example.
  * <p/>
+ * IMPORTANT: This is an insecure example. One should never encrypt with a TDF (such as RSA) directly.
+ * Such construction is deterministic and many known attacks against it exist.
+ * <p/>
  * INFO:
  * http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/CryptoSpec.html#Cipher
  *
@@ -46,7 +49,8 @@ public class AsymmetricCipherExample {
         // She then encrypts the clear-text and sends it to Bob.
         final Cipher encryptionCipher = Cipher.getInstance(algorithm);
         encryptionCipher.init(Cipher.ENCRYPT_MODE, bobKP.getPublic());
-        final byte[] cipherText = encryptionCipher.doFinal(clearText);;
+        final byte[] cipherText = encryptionCipher.doFinal(clearText);
+        ;
 
         // STEP 3: Display cipher text in hex. This is what an attacker would see,
         // if she intercepted the message.

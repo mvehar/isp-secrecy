@@ -14,6 +14,9 @@ import java.util.concurrent.LinkedBlockingQueue;
  * EXERCISE B4:
  * An agent communication example. Message Confidentiality is provided using asymmetric
  * cypher algorithm.
+ *
+ * IMPORTANT: This is an insecure example. One should never encrypt with a TDF (such as RSA) directly.
+ * Such construction is deterministic and many known attacks against it exist.
  * <p/>
  * Special care has to be taken when transferring binary data over the string-based communication
  * channel, therefore we convert byte array into String of hexadecimal characters.
@@ -29,9 +32,10 @@ import java.util.concurrent.LinkedBlockingQueue;
  * EXERCISE:
  * - Study this example.
  * - Observe both ciphertext in hexadecimal format
+ * - HW: Mount a man in the middle attack and try to figure out the contents of the message
  * <p/>
  * INFO:
- * http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/CryptoSpec.html#Cipher
+ * http://docs.oracle.com/javase/7/docs/technotes/guides/security/crypto/CryptoSpec.html#Cipher
  *
  * @author Iztok Starc <iztok.starc@fri.uni-lj.si>
  * @version 1
