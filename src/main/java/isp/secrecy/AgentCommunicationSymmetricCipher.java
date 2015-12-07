@@ -31,7 +31,10 @@ package isp.secrecy; /**
  * @version 1
  */
 
+import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.xml.bind.DatatypeConverter;
+import java.security.AlgorithmParameters;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.BlockingQueue;
@@ -71,7 +74,22 @@ public class AgentCommunicationSymmetricCipher {
                 try {
                     final String message = "I love you Bob. Kisses, Alice.";
                     System.out.println("[Alice] Message: " + message);
-                    // TODO
+
+                    final byte[] clearText = message.getBytes("UTF-8");
+                    final Cipher cipher = Cipher.getInstance(this.cryptoAlgorithm);
+                    cipher.init(Cipher.ENCRYPT_MODE, this.cryptoKey);
+                    final AlgorithmParameters ap = cipher.getParameters();
+                    //patrametrs
+                    final byte[] parametrsText = ap.getEncoded();
+                    final String parametersString = DatatypeConverter.printHexBinary(parametrsText);
+
+                    final byte[] cipherText = cipher.doFinal(clearText);
+                    final String cipherString = DatatypeConverter.printHexBinary(cipherText);
+
+                    //send out
+                    outgoing.put(parametersString);
+                    outgoing.put(cipherString);
+
                 } catch (Exception ex) {
                     System.out.println("[Alice] Exception: " + ex.getLocalizedMessage());
                 }
@@ -84,15 +102,25 @@ public class AgentCommunicationSymmetricCipher {
             public void run() {
                 try {
                     // TODO
-                    // final String parametersHEX = incoming.take();
-                    final String cipherTextHEX = incoming.take();
-                    // System.out.println("[Bob]: Received from Alice: Parameters: " + parametersHEX);
-                    System.out.println("[Bob]: Received from Alice: CT: " + cipherTextHEX);
+                    final String parametersString = incoming.take();
+                    final String cipherString = incoming.take();
 
-                    // Once you obtain the byte[] representation of cipher parameters, you can load them with
-                    // the following commands
-                    // final AlgorithmParameters ap = AlgorithmParameters.getInstance("AES");
-                    // ap.init(parameters);
+                    final byte[] parametersHEX  =DatatypeConverter.parseHexBinary(parametersString);
+                    final byte[] cipherHEX = DatatypeConverter.parseHexBinary(cipherString);
+
+                    //Parametrs init
+                    final AlgorithmParameters ap = AlgorithmParameters.getInstance("AES");
+                    ap.init(parametersHEX);
+
+                    final Cipher cipher2 = Cipher.getInstance(this.cryptoAlgorithm);
+                    cipher2.init(Cipher.DECRYPT_MODE, this.cryptoKey, ap);
+
+                    final byte[] decryptedText = cipher2.doFinal(cipherHEX);
+
+                    System.out.println("[Bob]: Received from Alice: Parameters: " + parametersString);
+                    System.out.println("[Bob]: Received from Alice: EncString: " + cipherString);
+                    System.out.println("[Bob]: Received from Alice: Original: " + new String(decryptedText));
+
                 } catch (Exception ex) {
                     System.out.println("[Bob] Exception: " + ex.getLocalizedMessage());
                 }
