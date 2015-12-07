@@ -39,6 +39,7 @@ public class AsymmetricCipherExample {
         final byte[] clearText = text.getBytes("UTF-8");
 
         System.out.println("Clear text:\n" + text);
+        System.out.println("Size :" + clearText.length);
         System.out.println("Clear text in HEX:\n" + DatatypeConverter.printHexBinary(clearText));
 
         // STEP 1: Bob creates his public and private key pair.
@@ -50,7 +51,8 @@ public class AsymmetricCipherExample {
         final Cipher encryptionCipher = Cipher.getInstance(algorithm);
         encryptionCipher.init(Cipher.ENCRYPT_MODE, bobKP.getPublic());
         final byte[] cipherText = encryptionCipher.doFinal(clearText);
-        ;
+        System.out.println("Length: "+cipherText.length);
+
 
         // STEP 3: Display cipher text in hex. This is what an attacker would see,
         // if she intercepted the message.
