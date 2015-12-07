@@ -28,7 +28,7 @@ import java.security.NoSuchAlgorithmException;
  * - Homework: Oscar intercepts the message and would like to decrypt the ciphertext. Help Oscar to
  * decrypt the ciphertext using brute force key search (exhaustive key search) if Oscar knows
  * that Alice has send the following message "I would like to keep this text confidential Bob. Kind regards, Alice."
- * (Known-plaintext attack)
+ * (Known-plaintext attack) (Use DES and manually set a poor key)
  * <p/>
  * INFO:
  * http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/CryptoSpec.html#Cipher
@@ -39,13 +39,16 @@ import java.security.NoSuchAlgorithmException;
  */
 public class SymmetricCipherExample {
     // BLOCK CIPHERS
-    public static final String[] ALG1 = {"DES", "DES/ECB/PKCS5Padding"};
-    public static final String[] ALG2 = {"DESede", "DESede/ECB/PKCS5Padding"};
-    public static final String[] ALG3 = {"AES", "AES/ECB/PKCS5Padding"};
-    public static final String[] ALG4 = {"AES", "AES/CBC/PKCS5Padding"};
+    public static final String[] ALG1 = { "DES", "DES/ECB/PKCS5Padding" };
+    public static final String[] ALG2 = { "DESede", "DESede/ECB/PKCS5Padding" };
+    public static final String[] ALG3 = { "AES", "AES/ECB/PKCS5Padding" };
+    public static final String[] ALG4 = { "AES", "AES/CBC/PKCS5Padding" };
 
     // STREAM CIPHER
-    public static final String[] ALG5 = {"RC4", "RC4"};
+    public static final String[] ALG5 = { "RC4", "RC4" };
+
+    // Authenticated encryption
+    public static final String[] ALG6 = { "AES", "AES/GCM/NoPadding" };
 
     public static void main(String[] args)
             throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException,

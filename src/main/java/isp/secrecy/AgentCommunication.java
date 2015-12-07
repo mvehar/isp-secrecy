@@ -32,8 +32,8 @@ public class AgentCommunication {
          * STEP 1.
          * Setup a insecure communication channel.
          */
-        final BlockingQueue<String> alice2bob = new LinkedBlockingQueue<String>();
-        final BlockingQueue<String> bob2alice = new LinkedBlockingQueue<String>();
+        final BlockingQueue<String> alice2bob = new LinkedBlockingQueue<>();
+        final BlockingQueue<String> bob2alice = new LinkedBlockingQueue<>();
 
         /**
          * STEP 2.
